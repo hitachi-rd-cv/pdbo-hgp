@@ -32,6 +32,7 @@ def get_config():
             KeysOptionTrainSig.LR_SCHEDULER: NamesLrScheduler.CONST,
             KeysOptionTrainSig.KWARGS_LR_SCHEDULER: {},
             KeysOptionTrainSig.DROP_LAST: False,
+            KeysOptionTrainSig.MODE_SGP: ModesSGP.NEDIC,
         },
         option_train_insignificant={KeysOptionTrainInsig.LOG_EVERY: 1, KeysOptionTrainInsig.NAMES_METRIC_LOG: []},
         lr=2e0,

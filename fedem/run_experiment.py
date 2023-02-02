@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------
-# Some classes or methods are made by modifying parts of FedEM (https://github.com/omarfoq/FedEM), Copyright {copyright_marfoq}.
-# The portions of the following codes are licensed under the {license_type_marfoq}.
-# The full license text is available at ({license_url_marfoq}).
+# Some classes or methods are made by modifying parts of FedEM (https://github.com/omarfoq/FedEM).
+# The portions of the following codes are licensed under the Apache License 2.0.
+# The full license text is available at (https://github.com/omarfoq/FedEM/blob/main/LICENSE).
 # ------------------------------------------------------------------------
 import os
 from argparse import Namespace
@@ -109,10 +109,11 @@ def get_state_dicts_model_in_fedem_experiment(
         kwargs_fedem,
         lrs,
         n_steps,
+        seed,
         kwargs_model=None,
 ):
     assert all([lr == lr for lr in lrs]), lrs
-    args_ = Namespace(**kwargs_fedem, lr=lrs[0], n_rounds=n_steps)
+    args_ = Namespace(**kwargs_fedem, lr=lrs[0], n_rounds=n_steps, seed=seed)
     torch.manual_seed(args_.seed)
 
     # save state_dicts of models and optimizers

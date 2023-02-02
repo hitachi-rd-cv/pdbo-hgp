@@ -8,7 +8,7 @@ from lib_common.torch.autograd import myjacobian
 from lib_task.common import assign_concatenated_parameters, reshape_hypergrads_cat
 from lib_task.concat_hgp import concat_params_and_weights, split_params_and_weights, kron_diag_matrix_vector_prod, \
     compute_expected_p_mat, update_param_cat_biased
-from lib_task.hyper_gradient_push import D_LR_SCHEDULER_NODE
+from lib_task.modules_sgp import D_LR_SCHEDULER_NODE
 from module_torch.hgp import HyperGradEstimatorDummy
 
 
@@ -62,7 +62,7 @@ def compute_true_hypergrad(clients, graph, loaders_train, loaders_valid, option_
 
     val_eval_mean = 0.
     for client, loader_valid in zip(clients, loaders_valid):
-        val_eval_mean += client.model.eval_metric(option_eval_metric[KeysOptionEval.NAME], loader_valid) / n_nodes
+        val_eval_mean += client.model._eval_metric(option_eval_metric[KeysOptionEval.NAME], loader_valid) / n_nodes
     C_x, C_y = torch.autograd.grad(val_eval_mean, (y_cat, lambda_cat), allow_unused=True)
     if C_y is None:
         C_y = torch.zeros_like(lambda_cat)
@@ -95,7 +95,9 @@ def compute_true_hypergrad(clients, graph, loaders_train, loaders_valid, option_
         inputs_nodes.append(inputs)
         idxs_sample_nodes.append(idxs)
 
-    x_cat_updated = update_param_cat_biased(clients, x_cat, z_cat, inputs_nodes, idxs_sample_nodes, P, lrs_latest, create_graph=True)
+    x_cat_updated = update_param_cat_biased(clients, x_cat, z_cat, inputs_nodes, idxs_sample_nodes, P, lrs_latest,
+                                            mode_sgp=option_train_significant[KeysOptionTrainSig.MODE_SGP],
+                                            create_graph=True)
 
     if option_train_significant[KeysOptionTrainSig.DISABLE_DEBIAS_WEIGHT]:
         y_cat_updated = x_cat_updated

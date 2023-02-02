@@ -1,7 +1,12 @@
 class AbbrModels:
     LEARNERS_ENSEMBLE = 'learners_ensemble'
     CNN_EMNIST = 'cnn_emnist'
+    CNN_CIFAR10 = 'cnn_cifar10'
     LR_TOY = 'lr_toy'
+    MN_CIFAR10 = 'mn_cifar10'
+    MN_CIFAR100 = 'mn_cifar100'
+    LSTM_SHAKESPEARE = 'lstm_shakespeare'
+    LANGUAGE_LEARNERS_ENSEMBLE = 'language_learners_ensemble'
 
 
 class NamesEvalMetric:
@@ -49,8 +54,8 @@ class KeysTarget:
     TIME_HYPER_UPDATE = 'time_hyper_update'
     STATE_DICT_GRAPH = 'state_dict_graph'
     LOG_TRAIN = 'log_training'
-    D_METRIC_FEDEM = 'd_metric_fedem'
-    D_METRIC_FEDEM_HYPER_STEPS = 'd_metric_fedem_hyper_steps'
+    DS_METRIC_FEDEM = 'd_metric_fedem'
+    DS_METRIC_FEDEM_HYPER_STEPS = 'd_metric_fedem_hyper_steps'
     ERROR_NORM_HYPERGRAD_STEPS = 'error_norm_hypergrad_steps'
 
 
@@ -73,6 +78,9 @@ class ModesHGPUpdate:
 class NamesDataset:
     EMNIST = 'emnist'
     TOY_MNIST = 'toy_mnist'
+    CIFAR10 = 'cifar10'
+    CIFAR100 = 'cifar100'
+    SHAKE_SPEARE = 'shakespeare'
 
 
 class TypesDevice:
@@ -90,16 +98,26 @@ class KeysOptionTrainSig:
     DISABLE_DEBIAS_WEIGHT = 'disable_debias_weight'
     DROP_LAST = 'drop_last'
     KWARGS_LR_SCHEDULER = 'kwargs_lr_scheduler'
+    MODE_SGP = 'iteration'
+
+
+class ModesSGP:
+    NEDIC = "nedic"
+    ASSRAN = "assran"
+
 
 class KeysOptionEval:
     NAME = 'name_eval_metric'
 
+
 class KeysOptionHGPInsig:
     NAMES_METRIC_LOG = 'names_hgp_metric'
+
 
 class NamesHGPMetric:
     U_NORM = 'u_norm'
     V_NORM = 'v_norm'
+    W_NORM = 'w_norm'
     V_DIFF_NORM = 'v_diff_norm'
 
 
@@ -107,18 +125,23 @@ class NamesHyperParam:
     SOFTMAX_CATEGORY_WEIGHTS = 'softmax_category_weights'
     LEARNERS_WEIGHTS = 'learners_weights'
     LEARNERS_WEIGHTS_AND_SOFTMAX_CATEGORY_WEIGHTS = 'learners_weights_and_softmax_category_weights'
-
+    HYPER_EXP_LOGITS_WEIGHTS = 'hyper_exp_logits_weights'
+    HYPER_SOFTMAX_LOGITS_WEIGHTS = 'hyper_softmax_logits_weights'
+    LEARNERS_WEIGHTS_AND_MULTI_SOFTMAX_LOGITS_WEIGHTS = 'learners_weights_and_multi_softmax_logits_weights'
+    LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS = 'learners_weights_and_single_softmax_logits_weights'
+    DUMMY = 'dummy'
 
 class NamesLoader:
     TRAIN = 'train'
     VALID = 'valid'
     TEST = 'test'
 
-
 class HyperOptimizers:
     SGD = 'sgd'
     ADAM = 'adam'
 
+
 class NamesLrScheduler:
     CONST = 'const'
     MULTI_STEP = 'multi_step'
+

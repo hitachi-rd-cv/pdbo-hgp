@@ -85,8 +85,8 @@ def log_hyper_sgd_step(clients, datasets_train, datasets_valid, datasets_test, b
         for name_loader, loaders in d_loaders.items():
             d_d_val_eval_nodes[option_eval_hyper[KeysOptionEval.NAME]][name_loader] = []
             val_eval_nodes = []
-            for idx_node, (model, loader) in enumerate(zip(clients, loaders)):
-                val_eval = model.eval_metric(metric=option_eval_hyper[KeysOptionEval.NAME], loader=loader).item()
+            for idx_node, (client, loader) in enumerate(zip(clients, loaders)):
+                val_eval = client.eval_metric(metric=option_eval_hyper[KeysOptionEval.NAME], loader=loader).item()
                 val_eval_nodes.append(val_eval)
                 d_d_val_eval_nodes[option_eval_hyper[KeysOptionEval.NAME]][name_loader].append(val_eval)
             ## mean

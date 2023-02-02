@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------
-# Some classes or methods are made by modifying parts of FedEM (https://github.com/omarfoq/FedEM), Copyright {copyright_marfoq}.
-# The portions of the following codes are licensed under the {license_type_marfoq}.
-# The full license text is available at ({license_url_marfoq}).
+# Some classes or methods are made by modifying parts of FedEM (https://github.com/omarfoq/FedEM).
+# The portions of the following codes are licensed under the Apache License 2.0.
+# The full license text is available at (https://github.com/omarfoq/FedEM/blob/main/LICENSE).
 # ------------------------------------------------------------------------
 import os
 import random

@@ -2,10 +2,9 @@ from torch.utils.data import DataLoader
 
 from fedem.aggregator import *
 from fedem.client import *
-from fedem.datasets import *
 from fedem.models import *
 from lib_common.torch.module import CrossEntropyLossNormalized
-from module_torch.model import CNNEMNIST, MultiLearners
+from module_torch.model import MultiLearners, MobileNetCIFAR10, CNNEMNIST
 from .metrics import accuracy
 from .optim import *
 from .optim import get_optimizer, get_lr_scheduler
@@ -147,7 +146,7 @@ def get_learners_ensemble(
     ]
 
     learners_weights = torch.ones(n_learners) / n_learners
-    if name == "emnist_learners_ensemble":
+    if name in ["emnist_learners_ensemble", "cifar10_learners_ensemble"]:
         return LearnersEnsembleHyperParameterized(learners=learners, learners_weights=learners_weights)
     else:
         return LearnersEnsemble(learners=learners, learners_weights=learners_weights)
@@ -186,7 +185,7 @@ def get_learner(
     """
     torch.manual_seed(seed)
 
-    if name == "emnist" or name == "femnist":
+    if name in ["emnist", "femnist"]:
         criterion = nn.CrossEntropyLoss(reduction="none").to(device)
         metric = accuracy
         model = FemnistCNN(num_classes=62).to(device)
@@ -196,13 +195,18 @@ def get_learner(
         metric = accuracy
         model = CNNEMNIST(**kwargs_model).to(device)
         is_binary_classification = False
-    elif name == "emnist_learners_ensemble":
+    elif name == "cifar10_softmax_weight":
+        criterion = nn.CrossEntropyLoss(reduction="none").to(device)
+        metric = accuracy
+        model = MobileNetCIFAR10(**kwargs_model).to(device)
+        is_binary_classification = False
+    elif name in ["emnist_learners_ensemble", "cifar10_learners_ensemble"]:
         criterion = CrossEntropyLossNormalized(reduction="none").to(device)
         metric = accuracy
         model = MultiLearners(**kwargs_model).to(device)
         is_binary_classification = False
     else:
-        raise NotImplementedError
+        raise ValueError(name)
 
     optimizer = \
         get_optimizer(
@@ -219,7 +223,7 @@ def get_learner(
             n_rounds=n_rounds
         )
 
-    if name == "emnist_softmax_weight":
+    if name in ["emnist_softmax_weight", "cifar10_softmax_weight"]:
         return LearnerHyperParameterized(
             model=model,
             criterion=criterion,
@@ -229,7 +233,7 @@ def get_learner(
             lr_scheduler=lr_scheduler,
             is_binary_classification=is_binary_classification
         )
-    elif name == "emnist_learners_ensemble":
+    elif name in ["emnist_learners_ensemble", "cifar10_learners_ensemble"]:
         return LearnerHyperParameterized(
             model=model,
             criterion=criterion,

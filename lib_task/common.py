@@ -46,8 +46,11 @@ def load_graph(mode_graph, n_nodes, state_dict=None, device=None):
 
 
 def get_loaders(batch_sizes, datasets, shuffle, drop_last):
-    return [DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last) for dataset, batch_size in zip(datasets, batch_sizes)]
-
+    loaders = []
+    for dataset, batch_size in zip(datasets, batch_sizes):
+        drop_last_tmp = drop_last and (len(dataset) > batch_size)
+        loaders.append(DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last_tmp))
+    return loaders
 
 def compute_expected_p_vec(model, graph):
     device = model.get_device_of_param()

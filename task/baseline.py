@@ -17,6 +17,7 @@ class InitModelsForFedEmSetting(waluigi.TaskBase):
 
     def run(self):
         state_dicts_models = get_state_dicts_model_in_fedem_experiment(
+            seed=self.fix_random_seed_value,
             kwargs_fedem=self.kwargs_fedem,
             n_nodes=self.n_nodes,
             kwargs_model=self.kwargs_build_base['kwargs_model'],
@@ -36,6 +37,7 @@ class InitBaselineModelsForFedEmSetting(waluigi.TaskBase):
 
     def run(self):
         state_dicts_models = get_state_dicts_model_in_fedem_experiment(
+            seed=self.fix_random_seed_value,
             kwargs_fedem=self.kwargs_fedem,
             n_nodes=self.n_nodes,
             lrs=[self.lr] * self.n_nodes,
@@ -52,7 +54,7 @@ class RunBaselineOnFedEmSetting(waluigi.TaskBase):
 
     def run(self):
         d_dataset, d_state_dicts_models, d_graph = self.load()
-        state_dicts_model, state_dicts_optimizer, _, _, d_metric, _ = self.run_in_sacred_experiment(
+        state_dicts_model, state_dicts_optimizer, _, _, d_metric_mean, d_metric_bottom = self.run_in_sacred_experiment(
             run_baselines,
             n_nodes=self.n_nodes,
             batch_sizes=[self.batch_size] * self.n_nodes,
@@ -67,11 +69,10 @@ class RunBaselineOnFedEmSetting(waluigi.TaskBase):
             mode_graph=self.mode_graph,
             state_dict_graph=d_graph[KeysTarget.STATE_DICT_GRAPH],
             use_cuda=self.use_cuda,
+            seed=self.fix_random_seed_value,
         )
         self.dump({
             KeysTarget.STATE_DICTS_MODEL: state_dicts_model,
             KeysTarget.STATE_DICTS_HYPER_OPTIMIZER: state_dicts_optimizer,
-            KeysTarget.D_METRIC_FEDEM: d_metric,
+            KeysTarget.DS_METRIC_FEDEM: [d_metric_mean, d_metric_bottom],
         })
-
-

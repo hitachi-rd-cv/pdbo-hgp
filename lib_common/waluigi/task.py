@@ -36,6 +36,7 @@ class TaskBase(gokart.TaskOnKart):
         "torch.cuda.manual_seed_all",
     ])
     name: str = luigi.Parameter('no_name', significant=False)
+    ver: str = luigi.Parameter('normalize_clusters_fix_assran')
     _func_run: staticmethod
 
     @luigi.Task.event_handler(luigi.Event.START)

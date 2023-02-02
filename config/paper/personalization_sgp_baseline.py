@@ -4,6 +4,28 @@ from task import *
 
 def get_config():
     n_nodes = 100
+
+    configs_overwrite = []
+    names_option = []
+
+    names_option.append('Local')
+    configs_overwrite.append(dict(
+        mode_graph=ModesGraph.SELF_LOOP,
+        kwargs_init_graph={},
+    ))
+
+    names_option.append('SGP (undirected)')
+    configs_overwrite.append(dict(
+        mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
+        kwargs_init_graph={'low': 0.4, 'high': 0.8, 'p': 1.0, 'force_sparse': False},
+    ))
+
+    names_option.append('SGP (directed)')
+    configs_overwrite.append(dict(
+        mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
+        kwargs_init_graph={'low': 0.4, 'high': 0.8, 'p': 1.0, 'force_sparse': False},
+    ))
+
     return dict(
         workspace_directory="./processed",
         db_name=os.environ.get('MONGO_DB', "local"),
@@ -12,7 +34,7 @@ def get_config():
         name_model=AbbrModels.CNN_EMNIST,
         kwargs_build_base={
             'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.SOFTMAX_CATEGORY_WEIGHTS,
+            'name_hyperparam': NamesHyperParam.DUMMY,
             'kwargs_hyperparam': {},
             'kwargs_model': {'weight_decay': 1e-3},
         },
@@ -26,6 +48,7 @@ def get_config():
             KeysOptionTrainSig.KWARGS_LR_SCHEDULER: {"milestones": [500, 550]},
             KeysOptionTrainSig.DROP_LAST: True,
             KeysOptionTrainSig.DISABLE_DEBIAS_WEIGHT: False,
+            KeysOptionTrainSig.MODE_SGP: ModesSGP.NEDIC,
         },
         option_train_insignificant={
             KeysOptionTrainInsig.LOG_EVERY: 5,
@@ -35,12 +58,12 @@ def get_config():
         option_hgp_insignificant={
             KeysOptionHGPInsig.NAMES_METRIC_LOG: [],
         },
-        lr=0.05,
+        lr=0.1,
         batch_size=128,
         n_steps=600,
         use_cuda=True,
         option_dataset={
-            'n_components': -1,
+            'n_components': 3,
             'alpha': 0.4,
             's_frac': 0.1,
             'tr_frac': 0.8,
@@ -55,8 +78,8 @@ def get_config():
             KeysOptionHGP.USE_TRUE_EXPECTED_EDGES: False,
             KeysOptionHGP.MODE_UPDATE: ModesHGPUpdate.SIMULTANEOUS,
             KeysOptionHGP.DUMPING: 1.0,
-            KeysOptionHGP.ALPHA_V: 0.9,
-            KeysOptionHGP.ALPHA_W: 0.1,
+            KeysOptionHGP.ALPHA_V: 1.0,
+            KeysOptionHGP.ALPHA_W: 0.0,
         },
         name_dataset=NamesDataset.EMNIST,
         shuffle_train=True,
@@ -68,27 +91,8 @@ def get_config():
             {KeysOptionEval.NAME: NamesEvalMetric.ACCURACY},
         ],
         save_state_dicts=False,
-        configs_overwrite=[
-            dict(
-                mode_graph=ModesGraph.SELF_LOOP,
-                kwargs_init_graph={},
-            ),
-            # sample weight
-            dict(
-                mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
-                kwargs_init_graph={'low': 0.4, 'high': 0.8, 'p': 1.0, 'force_sparse': False},
-            ),
-            # sample weight
-            dict(
-                mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
-                kwargs_init_graph={'low': 0.4, 'high': 0.8, 'p': 1.0, 'force_sparse': False},
-            ),
-        ],
-        names_option=[
-            'Local',
-            'SGP (undirected)',
-            'SGP (directed)',
-        ],
+        configs_overwrite=configs_overwrite,
+        names_option=names_option,
         hyper_optimizer=HyperOptimizers.ADAM,
         kwargs_hyper_optimizer={},
         hyper_learning_rate=1e0,
@@ -96,3 +100,8 @@ def get_config():
         n_hyper_steps=1,
         use_train_for_outer_loss=True,
     )
+
+
+if __name__ == "__main__":
+    config = get_config()
+    print(*[f'"{x}"' for x in config["names_option"]], sep=",\n")

@@ -8,25 +8,41 @@ def get_config():
     configs_overwrite = []
     names_option = []
 
-
-    names_option.append('PDBO-DA (undirected)')
+    names_option.append(f'PDBO-AT (undirected)')
     configs_overwrite.append(dict(
         name_model=AbbrModels.CNN_EMNIST,
         kwargs_build_base={
             'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.SOFTMAX_CATEGORY_WEIGHTS,
-            'kwargs_hyperparam': {},
+            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-3},
             'kwargs_model': {'weight_decay': 1e-3},
-
         },
         mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
-        lr=0.05,
+        lr=1e-1,
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
+        hyper_learning_rate=1e-1,
     ))
 
-    names_option.append('PDBO-MTL (undirected)')
+    names_option.append(f'PDBO-AT (directed)')
+    configs_overwrite.append(dict(
+        name_model=AbbrModels.CNN_EMNIST,
+        kwargs_build_base={
+            'mode_gossip': ModesGossip.NORMALIZE,
+            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-3},
+            'kwargs_model': {'weight_decay': 1e-3},
+        },
+        mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
+        lr=1e-1,
+        option_hgp={
+            KeysOptionHGP.DEPTH: 200,
+        },
+        hyper_learning_rate=1e-1,
+    ))
+
+    names_option.append(f'PDBO-MTL (undirected)')
     configs_overwrite.append(dict(
         name_model=AbbrModels.LEARNERS_ENSEMBLE,
         kwargs_build_base={
@@ -40,55 +56,14 @@ def get_config():
             },
         },
         mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
-        lr=0.25,
+        lr=0.5,
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
+        hyper_learning_rate=1e-1,
     ))
 
-    names_option.append('PDBO-DA&MTL (undirected)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SOFTMAX_CATEGORY_WEIGHTS,
-            'kwargs_hyperparam': {
-                'n_learners': 3,
-                "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
-                "gamma_learners": 1e-2,
-                'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 5e-4,
-            },
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 1e-3},
-            },
-        },
-        mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
-        lr=0.25,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-    ))
-
-    names_option.append('PDBO-DA (directed)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.CNN_EMNIST,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.SOFTMAX_CATEGORY_WEIGHTS,
-            'kwargs_hyperparam': {},
-            'kwargs_model': {'weight_decay': 1e-3},
-        },
-        mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
-        lr=0.05,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-    ))
-
-    names_option.append('PDBO-MTL (directed)')
+    names_option.append(f'PDBO-MTL (directed')
     configs_overwrite.append(dict(
         name_model=AbbrModels.LEARNERS_ENSEMBLE,
         kwargs_build_base={
@@ -102,24 +77,53 @@ def get_config():
             },
         },
         mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
-        lr=0.25,
+        lr=0.5,
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
+        hyper_learning_rate=1e-1,
     ))
 
-    names_option.append('PDBO-DA&MTL (directed)')
+    names_option.append(f'PDBO-AT(S)&MTL (undirected)')
     configs_overwrite.append(dict(
         name_model=AbbrModels.LEARNERS_ENSEMBLE,
         kwargs_build_base={
             'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SOFTMAX_CATEGORY_WEIGHTS,
+            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
             'kwargs_hyperparam': {
                 'n_learners': 3,
                 "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
                 "gamma_learners": 1e-2,
                 'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 5e-4,
+                'gamma_categories': 1e-3,
+            },
+            'kwargs_model': {
+                'n_learners': 3,
+                'name_learner_model': AbbrModels.CNN_EMNIST,
+                'kwargs_learner': {'weight_decay': 1e-3},
+            },
+        },
+        mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
+        lr=0.5,
+        option_hgp={
+            KeysOptionHGP.DEPTH: 200,
+        },
+        lrs_per_hyperparameter=[1e0, 1e-1],
+        hyper_learning_rate=None,
+    ))
+
+    names_option.append(f'PDBO-AT(S)&MTL (directed)')
+    configs_overwrite.append(dict(
+        name_model=AbbrModels.LEARNERS_ENSEMBLE,
+        kwargs_build_base={
+            'mode_gossip': ModesGossip.NORMALIZE,
+            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
+            'kwargs_hyperparam': {
+                'n_learners': 3,
+                "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
+                "gamma_learners": 1e-2,
+                'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
+                'gamma_categories': 1e-3,
             },
             'kwargs_model': {
                 'n_learners': 3,
@@ -128,10 +132,12 @@ def get_config():
             },
         },
         mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
-        lr=0.25,
+        lr=0.5,
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
+        lrs_per_hyperparameter=[1e0, 1e-1],
+        hyper_learning_rate=None,
     ))
 
     return dict(
@@ -147,8 +153,8 @@ def get_config():
             KeysOptionHGP.USE_TRUE_EXPECTED_EDGES: False,
             KeysOptionHGP.MODE_UPDATE: ModesHGPUpdate.SIMULTANEOUS,
             KeysOptionHGP.DUMPING: 1.0,
-            KeysOptionHGP.ALPHA_V: 0.9,
-            KeysOptionHGP.ALPHA_W: 0.1,
+            KeysOptionHGP.ALPHA_V: 1.0,
+            KeysOptionHGP.ALPHA_W: 0.0,
         },
         lr=None,
         kwargs_init_hparams={},
@@ -162,6 +168,7 @@ def get_config():
             KeysOptionTrainSig.KWARGS_LR_SCHEDULER: {"milestones": [500, 550]},
             KeysOptionTrainSig.DROP_LAST: True,
             KeysOptionTrainSig.DISABLE_DEBIAS_WEIGHT: False,
+            KeysOptionTrainSig.MODE_SGP: ModesSGP.NEDIC,
         },
         option_train_insignificant={
             KeysOptionTrainInsig.LOG_EVERY: 5,
@@ -175,7 +182,7 @@ def get_config():
         n_steps=600,
         use_cuda=True,
         option_dataset={
-            'n_components': -1,
+            'n_components': 3,
             'alpha': 0.4,
             's_frac': 0.1,
             'tr_frac': 0.8,
@@ -197,20 +204,14 @@ def get_config():
             {KeysOptionEval.NAME: NamesEvalMetric.ACCURACY},
         ],
         save_state_dicts=False,
-        n_hyper_steps=21,
+        n_hyper_steps=6,
         hyper_optimizer=HyperOptimizers.ADAM,
         kwargs_hyper_optimizer={},
-        hyper_learning_rate=1e-1,
+        hyper_learning_rate=None,
         use_train_for_outer_loss=True,
-        n_steps_logged_train=600,
-        option_train_insignificant_logged_train={
-            KeysOptionTrainInsig.LOG_EVERY: 5,
-            KeysOptionTrainInsig.NAMES_METRIC_LOG: [
-                NamesEvalMetric.ACCURACY,
-                NamesEvalMetric.LOSS_BARE_MEAN,
-            ]},
-        map_dataset_logged_train={
-            KeysTarget.TRAIN: KeysTarget.TRAIN,
-            KeysTarget.VALID: KeysTarget.TRAIN,
-        },
     )
+
+
+if __name__ == "__main__":
+    config = get_config()
+    print(*[f'"{x}"' for x in config["names_option"]], sep=",\n")

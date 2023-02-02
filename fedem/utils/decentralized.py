@@ -32,7 +32,7 @@ def compute_mixing_matrix(adjacency_matrix):
     ]
 
     prob = cp.Problem(objective, constraints)
-    prob.solve()
+    prob.solve(verbose=True)
 
     mixing_matrix = W.value
 

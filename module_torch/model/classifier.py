@@ -40,7 +40,7 @@ class MultiClassifierBase(ClassifierBase):
         x, y = x.to(device), y.to(device)
         return F.cross_entropy(self.forward(x), y, reduction='none')
 
-    def eval_metric(self, metric, loader):
+    def _eval_metric(self, metric, loader):
         device = next(self.parameters()).device
         if metric == NamesEvalMetric.LOSS_BARE_MEAN:
             loss_mean = 0.
@@ -74,6 +74,15 @@ class MultiClassifierBase(ClassifierBase):
         else:
             raise ValueError(metric)
 
+    def eval_metric_sum_from_x_y(self, metric, x, y):
+        device = next(self.parameters()).device
+        if metric == NamesEvalMetric.LOSS_BARE_MEAN:
+            x, y = x.to(device), y.to(device)
+            return F.cross_entropy(self.forward(x), y, reduction='sum')
+
+        else:
+            raise ValueError(metric)
+
 
 class BinaryClassifierBase(ClassifierBase):
     def bare_loss(self, x, y):
@@ -86,7 +95,7 @@ class BinaryClassifierBase(ClassifierBase):
         x, y = x.to(device), y.type(torch.float32).to(device)
         return F.binary_cross_entropy(self.forward(x), y, reduction='none')
 
-    def eval_metric(self, metric, loader):
+    def _eval_metric(self, metric, loader):
         device = next(self.parameters()).device
         if metric == NamesEvalMetric.LOSS_BARE_MEAN:
             loss_mean = 0.
@@ -117,6 +126,15 @@ class BinaryClassifierBase(ClassifierBase):
             acc = 100. * correct / len(loader.dataset)
 
             return acc
+
+        else:
+            raise ValueError(metric)
+
+    def eval_metric_sum_from_x_y(self, metric, x, y):
+        device = next(self.parameters()).device
+        if metric == NamesEvalMetric.LOSS_BARE_MEAN:
+            x, y = x.to(device), y.type(torch.float32).to(device)
+            return F.binary_cross_entropy(self.forward(x), y, reduction='sum')
 
         else:
             raise ValueError(metric)

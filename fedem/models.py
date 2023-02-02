@@ -1,10 +1,12 @@
 # ------------------------------------------------------------------------
-# The following codes are copied from parts of FedEM (https://github.com/omarfoq/FedEM), Copyright {copyright_marfoq}.
-# The following codes are licensed under the {license_type_marfoq}.
-# The full license text is available at ({license_url_marfoq}).
+# The following codes are copied from parts of FedEM (https://github.com/omarfoq/FedEM).
+# The following codes are licensed under the Apache License 2.0.
+# The full license text is available at (https://github.com/omarfoq/FedEM/blob/main/LICENSE).
 # ------------------------------------------------------------------------
 import torch.nn as nn
 import torch.nn.functional as F
+
+import torchvision.models as models
 
 
 class FemnistCNN(nn.Module):
@@ -33,3 +35,13 @@ class FemnistCNN(nn.Module):
         return x
 
 
+def get_mobilenet(n_classes):
+    """
+    creates MobileNet model with `n_classes` outputs
+    :param n_classes:
+    :return: nn.Module
+    """
+    model = models.mobilenet_v2(pretrained=True)
+    model.classifier[1] = nn.Linear(model.classifier[1].in_features, n_classes)
+
+    return model

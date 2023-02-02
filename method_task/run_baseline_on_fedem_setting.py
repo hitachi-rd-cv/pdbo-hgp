@@ -21,11 +21,12 @@ def run_baselines(
         mode_graph,
         use_cuda,
         state_dicts_models_init,
+        seed,
         _run=None,
 ):
     assert all([lrs[0] == lr for lr in lrs]), lrs
     assert all([batch_sizes[0] == bs for bs in batch_sizes]), batch_sizes
-    args_ = Namespace(**kwargs_fedem, lr=lrs[0], n_rounds=n_steps, bz=batch_sizes[0])
+    args_ = Namespace(**kwargs_fedem, lr=lrs[0], n_rounds=n_steps, bz=batch_sizes[0], seed=seed)
 
     device = torch.device(TypesDevice.CUDA if use_cuda else TypesDevice.CPU)
     graph = load_graph(mode_graph, n_nodes=n_nodes, state_dict=state_dict_graph).to(device)

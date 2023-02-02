@@ -83,6 +83,7 @@ class ZipTaskBase(waluigi.TaskBase):
 
     def requires(self):
         assert len(self.configs_overwrite) == len(self.names_option)
+        assert len(set(self.names_option)) == len(self.names_option), "names_option must be unique"
         if self.run_only is None:
             run_only = list(range(len(self.configs_overwrite)))
         else:

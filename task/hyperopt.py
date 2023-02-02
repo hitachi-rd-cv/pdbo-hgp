@@ -231,7 +231,7 @@ class HyperSGDStepOnFedEmSetting(waluigi.TaskBase):
                 KeysTarget.STATE_DICTS_HYPER: state_dicts_hyperparameters,
                 KeysTarget.HYPER_GRADIENTS_NODES: hypergrads_nodes,
                 KeysTarget.STATE_DICTS_HYPER_OPTIMIZER: state_dicts_hyper_optimizer,
-                KeysTarget.D_METRIC_FEDEM: (d_metric_mean, d_metric_bottom),
+                KeysTarget.DS_METRIC_FEDEM: [d_metric_mean, d_metric_bottom],
             })
 
 
@@ -249,5 +249,5 @@ class HyperSGDOnFedEmSetting(waluigi.TaskBase):
         self.dump({
             KeysTarget.HYPER_STATE_DICTS_OF_HYPER_STEPS: [r[KeysTarget.STATE_DICTS_HYPER] for r in results],
             KeysTarget.STATE_DICTS_HYPER: results[-1][KeysTarget.STATE_DICTS_HYPER],
-            KeysTarget.D_METRIC_FEDEM_HYPER_STEPS: [r[KeysTarget.D_METRIC_FEDEM] for r in results[1:]],
+            KeysTarget.DS_METRIC_FEDEM_HYPER_STEPS: [r[KeysTarget.DS_METRIC_FEDEM] for r in results[1:]],
         })

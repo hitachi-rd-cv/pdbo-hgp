@@ -8,13 +8,13 @@ def get_config():
     configs_overwrite = []
     names_option = []
 
-    names_option.append('PDBO-DA (centralized)')
+    names_option.append(f'PDBO-AT (centralized)')
     configs_overwrite.append(dict(
         name_model=AbbrModels.CNN_EMNIST,
         kwargs_build_base={
             'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.SOFTMAX_CATEGORY_WEIGHTS,
-            'kwargs_hyperparam': {},
+            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
             'kwargs_model': {'weight_decay': 0.},
         },
         kwargs_fedem={
@@ -24,12 +24,35 @@ def get_config():
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
-        lr=0.01,
+        lr=0.03,
         mode_graph=ModesGraph.CONSTANTS,
         kwargs_init_graph={},
+        hyper_learning_rate=1e-1,
     ))
 
-    names_option.append('PDBO-MTL (centralized)')
+    names_option.append(f'PDBO-AT (decentralized)')
+    configs_overwrite.append(dict(
+        name_model=AbbrModels.CNN_EMNIST,
+        kwargs_build_base={
+            'mode_gossip': ModesGossip.WEIGHT_GIVEN,
+            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
+            'kwargs_model': {'weight_decay': 0.},
+        },
+        kwargs_fedem={
+            'experiment': 'emnist_softmax_weight',
+            'decentralized': True,
+        },
+        option_hgp={
+            KeysOptionHGP.DEPTH: 200,
+        },
+        lr=0.03,
+        mode_graph=ModesGraph.ERDOS_RENYI,
+        kwargs_init_graph={'p': 0.5},
+        hyper_learning_rate=1e-1,
+    ))
+
+    names_option.append(f'PDBO-MTL (centralized)')
     configs_overwrite.append(dict(
         name_model=AbbrModels.LEARNERS_ENSEMBLE,
         kwargs_build_base={
@@ -49,24 +72,50 @@ def get_config():
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
-        lr=0.05,
+        lr=0.1,
         mode_graph=ModesGraph.CONSTANTS,
         kwargs_init_graph={},
         hyper_learning_rate=1e0,
     ))
 
-    names_option.append('PDBO-DA&MTL (centralized)')
+    names_option.append(f'PDBO-MTL (decentralized)')
+    configs_overwrite.append(dict(
+        name_model=AbbrModels.LEARNERS_ENSEMBLE,
+        kwargs_build_base={
+            'mode_gossip': ModesGossip.WEIGHT_GIVEN,
+            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
+            'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
+            'kwargs_model': {
+                'n_learners': 3,
+                'name_learner_model': AbbrModels.CNN_EMNIST,
+                'kwargs_learner': {'weight_decay': 0.},
+            },
+        },
+        kwargs_fedem={
+            'experiment': 'emnist_learners_ensemble',
+            'decentralized': True,
+        },
+        option_hgp={
+            KeysOptionHGP.DEPTH: 200,
+        },
+        lr=0.1,
+        mode_graph=ModesGraph.ERDOS_RENYI,
+        kwargs_init_graph={'p': 0.5},
+        hyper_learning_rate=1e0,
+    ))
+
+    names_option.append(f'PDBO-AT(S)&MTL (centralized)')
     configs_overwrite.append(dict(
         name_model=AbbrModels.LEARNERS_ENSEMBLE,
         kwargs_build_base={
             'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SOFTMAX_CATEGORY_WEIGHTS,
+            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
             'kwargs_hyperparam': {
                 'n_learners': 3,
                 "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
                 "gamma_learners": 1e-2,
                 'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 5e-4,
+                'gamma_categories': 1e-2,
             },
             'kwargs_model': {
                 'n_learners': 3,
@@ -81,72 +130,25 @@ def get_config():
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
-        lr=0.05,
+        lr=0.1,
         mode_graph=ModesGraph.CONSTANTS,
         kwargs_init_graph={},
         lrs_per_hyperparameter=[1e0, 1e-1],
         hyper_learning_rate=None,
     ))
 
-    names_option.append('PDBO-DA (decentralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.CNN_EMNIST,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.WEIGHT_GIVEN,
-            'name_hyperparam': NamesHyperParam.SOFTMAX_CATEGORY_WEIGHTS,
-            'kwargs_hyperparam': {},
-            'kwargs_model': {'weight_decay': 0.},
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_softmax_weight',
-            'decentralized': True,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.01,
-        mode_graph=ModesGraph.ERDOS_RENYI,
-        kwargs_init_graph={'p': 0.4},
-    )),
-
-    names_option.append('PDBO-MTL (decentralized)')
+    names_option.append(f'PDBO-AT(S)&MTL (decentralized)')
     configs_overwrite.append(dict(
         name_model=AbbrModels.LEARNERS_ENSEMBLE,
         kwargs_build_base={
             'mode_gossip': ModesGossip.WEIGHT_GIVEN,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
-            'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 0.},
-            },
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_learners_ensemble',
-            'decentralized': True,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.05,
-        mode_graph=ModesGraph.ERDOS_RENYI,
-        kwargs_init_graph={'p': 0.4},
-        hyper_learning_rate=1e0,
-    ))
-
-    names_option.append('PDBO-DA&MTL (decentralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.WEIGHT_GIVEN,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SOFTMAX_CATEGORY_WEIGHTS,
+            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
             'kwargs_hyperparam': {
                 'n_learners': 3,
                 "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
                 "gamma_learners": 1e-2,
                 'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 5e-4,
+                'gamma_categories': 1e-2,
             },
             'kwargs_model': {
                 'n_learners': 3,
@@ -161,9 +163,9 @@ def get_config():
         option_hgp={
             KeysOptionHGP.DEPTH: 200,
         },
-        lr=0.05,
+        lr=0.1,
         mode_graph=ModesGraph.ERDOS_RENYI,
-        kwargs_init_graph={'p': 0.4},
+        kwargs_init_graph={'p': 0.5},
         lrs_per_hyperparameter=[1e0, 1e-1],
         hyper_learning_rate=None,
     ))
@@ -185,6 +187,7 @@ def get_config():
             KeysOptionTrainSig.KWARGS_LR_SCHEDULER: {},
             KeysOptionTrainSig.DROP_LAST: False,
             KeysOptionTrainSig.DISABLE_DEBIAS_WEIGHT: True,
+            KeysOptionTrainSig.MODE_SGP: ModesSGP.ASSRAN,
         },
         option_train_insignificant={
             KeysOptionTrainInsig.LOG_EVERY: 5,
@@ -204,10 +207,10 @@ def get_config():
         lr=None,
         batch_size=128,
         n_steps=200,
-        n_hyper_steps=21,
+        n_hyper_steps=6,
         use_cuda=True,
         option_dataset={
-            'n_components': -1,
+            'n_components': 3,
             'alpha': 0.4,
             's_frac': 0.1,
             'tr_frac': 0.8,
@@ -246,8 +249,12 @@ def get_config():
             'locally_tune_clients': False,
             'validation': False,
             'verbose': 1,
-            'seed': 1234
         },
         seed_dataset=12345,
         use_train_for_outer_loss=True,
     )
+
+
+if __name__ == "__main__":
+    config = get_config()
+    print(*[f'"{x}"' for x in config["names_option"]], sep=",\n")

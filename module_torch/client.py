@@ -17,7 +17,6 @@ class Client(nn.Module):
 
         self.gossip = D_GOSSIP_CLASS[mode_gossip](n_nodes, idx_node, **kwargs_gossip)
         self.model = D_MODELS[name_model](**kwargs_model, hyperparameters=self.hyperparameter_module)  # to avoid assigning as a parameter of the model
-        self.use_expected_edge = True
 
         innerparameters = []
         for p in self.model.parameters(recurse=True):
@@ -40,11 +39,17 @@ class Client(nn.Module):
         self.params_updated = [torch.zeros_like(x) for x in self.innerparameters]
         self.weight_updated = torch.zeros_like(self.gossip.weight)
         self.update_expected_edge = True
-        if self.use_expected_edge:
-            self.gossip.initialize_expected_values()
+        self.gossip.initialize_expected_values()
+
+    def estimate(self):
+        self.update_expected_edge = False
 
     def eval_metric(self, *args, **kwargs):
-        return self.model.eval_metric(*args, **kwargs)
+        self.model.eval()
+        with torch.no_grad():
+            out = self.model._eval_metric(*args, **kwargs)
+        self.model.train()
+        return out
 
     def _initialize_biased_innerparameters(self):
         # biased parameter denoted by x in the paper
@@ -58,11 +63,6 @@ class Client(nn.Module):
 
     def loss(self, *args, **kwargs):
         raise NotImplementedError
-
-    def outer_loss(self, metric, loader):
-        loss_model = self.eval_metric(metric, loader)
-        loss_hyper = self.hyperparameter_module.loss()
-        return loss_model + loss_hyper
 
     def get_device_of_param(self):
         return next(self.parameters()).device
@@ -104,7 +104,8 @@ class Client(nn.Module):
             # without detach_() copy_ accumulates the grad_fn tied to the attribute. copy_ passes the grad_fn of inputs not only the values.
             z.copy_(x)
 
-    def obtain_step(self, step, inputs, idxs, create_graph=False):
+    def get_biased_parameter_step(self, step, inputs, idxs, create_graph=False):
+        self.debias_parameters()
         kwargs_loss = self.get_kwargs_loss(inputs, idxs)
         loss = self.model.loss(inputs, **kwargs_loss)
         # TODO(future): loss.backward(create_graph=create_graph)
@@ -128,67 +129,7 @@ class Client(nn.Module):
         else:
             return {}
 
-    def mix_sgp_partial(self, sgp_msg, n_steps=None):
-        from_node, msg_body = sgp_msg
-        if msg_body is not None:
-            params_get, weight_get = msg_body
-            for x, x_get in zip(self.params_updated, params_get):
-                x.add_(x_get.clone().detach())
-            self.weight_updated.add_(weight_get.clone().detach())
-
-        # update expected in_neighbors
-        if self.use_expected_edge and self.update_expected_edge:
-            assert n_steps is not None, n_steps
-            is_in_neighbor = float(msg_body is not None)
-            self.gossip.mix_are_in_neighbors_expected(is_in_neighbor, from_node, n_steps)
-
-    def step_sgp(self):
-        with torch.no_grad():
-            # udpate
-            for x, x_update in zip(self.params_biased, self.params_updated):
-                x.copy_(x_update.clone().detach())
-            if self.weight_updated > 0.:
-                self.gossip.weight.copy_(self.weight_updated.clone().detach())
-
-            if self.use_expected_edge and self.update_expected_edge:
-                self.gossip.step_expected_values()
-
-            # initialize
-            for x in self.params_updated:
-                x.zero_()
-            self.weight_updated.zero_()
-
-            if self.use_expected_edge and self.update_expected_edge:
-                self.gossip.initialize_expected_updated_values()
-
-    def estimate(self):
-        self.update_expected_edge = False
-
-    def gen_sgp_messages(self, are_connected, step, inputs, idxs, dumping=1., n_steps=None, create_graph=False, no_weight_update=False):
-        for to_node, is_connected in enumerate(are_connected):
-            p = self.gossip.get_p_vec(are_connected)[to_node]
-            if self.use_expected_edge and self.update_expected_edge:
-                self.gossip.mix_p_vec_expected(p, to_node, n_steps)
-
-            if is_connected:
-                if to_node == self.gossip.idx_node:
-                    self.debias_parameters()
-                    update_steps = self.obtain_step(step, inputs, idxs, create_graph=create_graph)
-                    params_send = [p * x + dumping * s for x, s in zip(self.params_biased, update_steps)]
-                else:
-                    params_send = [p * x for x in self.params_biased]
-
-                if no_weight_update:
-                    weight_send = torch.zeros_like(self.gossip.weight)
-                else:
-                    weight_send = p * self.gossip.weight
-
-                yield self.gossip.idx_node, (params_send, weight_send)
-
-            else:
-                yield self.gossip.idx_node, None
-
-    def gen_expected_sgp_messages(self, step, inputs, idxs, dumping=1., create_graph=False, no_weight_update=False, true_p_vec_expected=None, true_are_in_neighbors_expected=None):
+    def gen_expected_ps(self, true_p_vec_expected=None, true_are_in_neighbors_expected=None):
         if true_p_vec_expected is not None and true_are_in_neighbors_expected is not None:
             p_vec_expected = true_p_vec_expected
             are_in_neighbors_expected = true_are_in_neighbors_expected
@@ -196,16 +137,27 @@ class Client(nn.Module):
             p_vec_expected = self.gossip.p_vec_expected
             are_in_neighbors_expected = self.gossip.are_in_neighbors_expected
         for to_node, (is_in_neighbor_expected, p_expect) in enumerate(zip(are_in_neighbors_expected, p_vec_expected)):
-            if to_node == self.gossip.idx_node:
-                self.debias_parameters()
-                update_steps = self.obtain_step(step, inputs, idxs, create_graph=create_graph)
-                params_send = [(p_expect * x + dumping * s) / is_in_neighbor_expected for x, s in zip(self.params_biased, update_steps)]
-            else:
-                params_send = [(p_expect / is_in_neighbor_expected) * x for x in self.params_biased]
+            yield self.gossip.idx_node, p_expect / is_in_neighbor_expected
 
-            if no_weight_update:
-                weight_send = torch.zeros_like(self.gossip.weight)
-            else:
-                weight_send = (p_expect / is_in_neighbor_expected) * self.gossip.weight
+    def gen_expected_nedic_sgp_messages(self, step, inputs, idxs, dumping=1., create_graph=False, no_weight_update=False, true_p_vec_expected=None, true_are_in_neighbors_expected=None):
+        if true_p_vec_expected is not None and true_are_in_neighbors_expected is not None:
+            p_vec_expected = true_p_vec_expected
+            are_in_neighbors_expected = true_are_in_neighbors_expected
+        else:
+            p_vec_expected = self.gossip.p_vec_expected
+            are_in_neighbors_expected = self.gossip.are_in_neighbors_expected
 
-            yield self.gossip.idx_node, (params_send, weight_send)
+        with torch.backends.cudnn.flags(enabled=False):
+            for to_node, (is_in_neighbor_expected, p_expect) in enumerate(zip(are_in_neighbors_expected, p_vec_expected)):
+                if to_node == self.gossip.idx_node:
+                    update_steps = self.get_biased_parameter_step(step, inputs, idxs, create_graph=create_graph)
+                    params_send = [(p_expect * x + dumping * s) / is_in_neighbor_expected for x, s in zip(self.params_biased, update_steps)]
+                else:
+                    params_send = [(p_expect / is_in_neighbor_expected) * x for x in self.params_biased]
+
+                if no_weight_update:
+                    weight_send = torch.zeros_like(self.gossip.weight)
+                else:
+                    weight_send = (p_expect / is_in_neighbor_expected) * self.gossip.weight
+
+                yield self.gossip.idx_node, (params_send, weight_send)

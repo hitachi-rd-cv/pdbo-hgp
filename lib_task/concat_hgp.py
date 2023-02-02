@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 
+from constants import ModesSGP
 from lib_task.common import compute_expected_p_vec
 
 
@@ -63,7 +64,7 @@ def compute_loss_sum(clients, inputs_nodes, idxs_sample_nodes=None, to_node=None
     return loss_sum
 
 
-def update_param_cat_biased(clients, param_cat_biased, param_cat_debiased, inputs_nodes, idxs_sample_nodes, P, lr_cat, create_graph, train_logger=None):
+def update_param_cat_biased(clients, param_cat_biased, param_cat_debiased, inputs_nodes, idxs_sample_nodes, P, lr_cat, create_graph, mode_sgp, train_logger=None):
     if train_logger is not None:
         for idx_node, lr in enumerate(lr_cat):
             train_logger.record_step_value(idx_node, 'lr', lr.item())
@@ -71,7 +72,13 @@ def update_param_cat_biased(clients, param_cat_biased, param_cat_debiased, input
     loss_sum = compute_loss_sum(clients, inputs_nodes, idxs_sample_nodes=idxs_sample_nodes, train_logger=train_logger)
     # param update
     grad = torch.autograd.grad(loss_sum, param_cat_debiased, create_graph=create_graph)[0]
-    # x = P x - A * g (z, lambda)
-    param_cat_biased_updated = kron_matrix_vector_prod(param_cat_biased, P) - kron_diag_matrix_vector_prod(grad, lr_cat)
+    if mode_sgp == ModesSGP.ASSRAN:
+        # x = P (x - A * g (z, lambda))
+        param_cat_biased_updated = kron_matrix_vector_prod(param_cat_biased - kron_diag_matrix_vector_prod(grad, lr_cat), P)
+    elif mode_sgp == ModesSGP.NEDIC:
+        # x = P x - A * g (z, lambda)
+        param_cat_biased_updated = kron_matrix_vector_prod(param_cat_biased, P) - kron_diag_matrix_vector_prod(grad, lr_cat)
+    else:
+        raise ValueError(mode_sgp)
 
     return param_cat_biased_updated

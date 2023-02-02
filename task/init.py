@@ -25,6 +25,7 @@ class MakeDatasets(waluigi.TaskBase):
             name_dataset=self.name_dataset,
             n_nodes=self.n_nodes,
             seed=seed,
+            output_dir=self.make_and_get_temporary_directory(),
         )
 
         self.dump({

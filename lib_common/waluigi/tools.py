@@ -26,7 +26,7 @@ def print_tree(task, indent='', last=True):
         warnings.filterwarnings(action='ignore', message='Task .* without outputs has no custom complete\\(\\) method')
         is_task_complete = task.complete()
     is_complete = (bcolors.OKGREEN + 'COMPLETE' if is_task_complete else bcolors.OKBLUE + 'PENDING') + bcolors.ENDC
-    name = task.task_id
+    name = f"{task.task_family}_{task.make_unique_id()}"
     params = task.to_str_params(only_significant=True)
     result = '\n' + indent
     if (last):
