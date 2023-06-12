@@ -3,7 +3,7 @@ from argparse import Namespace
 import torch
 
 from constants import TypesDevice
-from fedem.run_experiment import run_experiment
+from fedem import run_experiment
 from lib_task.common import load_graph
 
 

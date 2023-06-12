@@ -12,6 +12,9 @@ class GossipBase(nn.Module):
         # define weight for SGP
         self.weight = nn.Parameter(torch.tensor(1.))
 
+    def initialize_weight(self):
+        with torch.no_grad():
+            self.weight.copy_(torch.tensor(1., dtype=self.weight.dtype, device=self.weight.device))
 
 class GossipConstBase(GossipBase):
     def __init__(self, n_nodes, idx_node):

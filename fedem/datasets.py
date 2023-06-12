@@ -14,6 +14,41 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from fedem.utils.constants import SHAKESPEARE_CONFIG
 
 
+class TabularDataset(Dataset):
+    """
+    Constructs a torch.utils.Dataset object from a pickle file;
+    expects pickle file stores tuples of the form (x, y) where x is vector and y is a scalar
+
+    Attributes
+    ----------
+    data: iterable of tuples (x, y)
+
+    Methods
+    -------
+    __init__
+    __len__
+    __getitem__
+    """
+
+    def __init__(self, data, targets, n_classes):
+        """
+        :param path: path to .pkl file
+        """
+        self.data = data
+        self.targets = targets
+
+        self.n_classes = n_classes
+        self.classes = [str(i) for i in range(n_classes)]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        x = self.data[idx]
+        y = self.targets[idx]
+        return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.int64), idx
+
+
 class SubEMNIST(Dataset):
     def __init__(self, indices, data, targets, classes_use=None, transform=None):
         """
@@ -25,6 +60,55 @@ class SubEMNIST(Dataset):
         # assert len(indices) > 0
         self.indices = indices
         self.classes = EMNIST._all_classes
+        self.classes_use = classes_use
+
+        if transform is None:
+            self.transform = \
+                Compose([
+                    ToTensor(),
+                    Normalize((0.1307,), (0.3081,))
+                ])
+        else:
+            self.transform = transform
+
+        self.data, self.targets = data, targets
+
+        if self.classes_use is not None:
+            self.indices = torch.tensor([idx for idx, t in enumerate(self.targets) if (t.item() in self.classes_use) and (idx in self.indices)])
+            self.classes = [self.classes[i] for i in classes_use]
+
+        self.data = self.data[self.indices]
+        self.targets = self.targets[self.indices]
+
+        if self.classes_use is not None:
+            map_idx = {old_id: new_id for new_id, old_id in enumerate(self.classes_use)}
+            self.targets = torch.tensor([map_idx[t.item()] for t in self.targets])
+
+    def __len__(self):
+        return self.data.size(0)
+
+    def __getitem__(self, index):
+        img, target = self.data[index], int(self.targets[index])
+
+        img = Image.fromarray(img.numpy(), mode='L')
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        return img, target, index
+
+
+class SubMNIST(Dataset):
+    def __init__(self, indices, data, targets, classes_use=None, transform=None):
+        """
+        :param path: path to .pkl file; expected to store list of indices
+        :param data: EMNIST dataset inputs
+        :param targets: EMNIST dataset labels
+        :param transform:
+        """
+        # assert len(indices) > 0
+        self.indices = indices
+        self.classes = [str(i) for i in range(10)]
         self.classes_use = classes_use
 
         if transform is None:

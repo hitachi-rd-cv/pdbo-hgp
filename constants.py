@@ -7,7 +7,9 @@ class AbbrModels:
     MN_CIFAR100 = 'mn_cifar100'
     LSTM_SHAKESPEARE = 'lstm_shakespeare'
     LANGUAGE_LEARNERS_ENSEMBLE = 'language_learners_ensemble'
-
+    FC_MNIST = 'fc_mnist'
+    LR_MNIST = 'lr_mnist'
+    CNN_MNIST = 'cnn_mnist'
 
 class NamesEvalMetric:
     LOSS_BARE_MEAN = 'loss_bare_mean'
@@ -43,6 +45,8 @@ class KeysTarget:
     STATE_DICTS_HYPER_OPTIMIZER = 'hyper_optimizer_state_dicts'
     STATE_DICTS_ESTIMATOR = 'state_dicts_estimator'
     HYPER_STATE_DICTS_OF_HYPER_STEPS = 'hyper_state_dicts_of_hyper_steps'
+    DIFFS_VAL_EVAL = 'diffs_loss'
+    FIG_LINEAR_APPROX_ERROR = 'fig_linear_approx_error'
     TRAIN = 'train'
     VALID = 'valid'
     TEST = 'test'
@@ -52,11 +56,14 @@ class KeysTarget:
     D_D_VAL_EVAL_MEAN_HYPER_STEPS = 'd_d_val_eval_mean_hyper_steps'
     D_D_VAL_EVAL_BOTTOM_HYPER_STEPS = 'd_d_val_eval_bottom_hyper_steps'
     TIME_HYPER_UPDATE = 'time_hyper_update'
+    HYPER_PERTURBS_ITERS = 'hyper_perturbs_of_nodes_of_iters'
     STATE_DICT_GRAPH = 'state_dict_graph'
     LOG_TRAIN = 'log_training'
     DS_METRIC_FEDEM = 'd_metric_fedem'
     DS_METRIC_FEDEM_HYPER_STEPS = 'd_metric_fedem_hyper_steps'
     ERROR_NORM_HYPERGRAD_STEPS = 'error_norm_hypergrad_steps'
+    ERROR_NORM_HYPERGRAD_STEPS_OF_SEEDS = 'error-norm-hypergrad-steps-of-seeds'
+
 
 
 class KeysOptionHGP:
@@ -64,16 +71,10 @@ class KeysOptionHGP:
     DUMPING = 'dumping'
     USE_TRUE_EXPECTED_EDGES = 'use_true_expected_edges'
     MODE_UPDATE = 'mode_update'
-    ALPHA_V = 'alpha_v'
-    ALPHA_W = 'alpha_w'
-
-class ModesHGPUpdate:
-    SIMULTANEOUS = 'simultaneous'
-    ALT_U_V = 'alt_u_v'
-    ALT_V_U = 'alt_v_u'
-    U_TO_V = 'u_to_v'
-
-
+    N_PUSH = 'n_push'
+    USE_TRUE_DEBIAS_WEIGHTS = 'use_true_debias_weights'
+    INIT_DEBIAS_WEIGHT = 'init_debias_weight'
+    INDEPENDENT_JACOBS = 'independent-jacobs'
 
 class NamesDataset:
     EMNIST = 'emnist'
@@ -81,6 +82,8 @@ class NamesDataset:
     CIFAR10 = 'cifar10'
     CIFAR100 = 'cifar100'
     SHAKE_SPEARE = 'shakespeare'
+    SYNTHETIC = 'synthetic'
+    EMNIST_DIGITS = 'emnist_digits'
 
 
 class TypesDevice:
@@ -130,18 +133,30 @@ class NamesHyperParam:
     LEARNERS_WEIGHTS_AND_MULTI_SOFTMAX_LOGITS_WEIGHTS = 'learners_weights_and_multi_softmax_logits_weights'
     LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS = 'learners_weights_and_single_softmax_logits_weights'
     DUMMY = 'dummy'
+    REG_DECAY = 'reg_decay'
+    LOSS_MASKS = 'loss_masks'
+
 
 class NamesLoader:
     TRAIN = 'train'
     VALID = 'valid'
     TEST = 'test'
 
+
 class HyperOptimizers:
     SGD = 'sgd'
     ADAM = 'adam'
 
 
+class NamesMetricDiff:
+    KENDALL_TAU = 'kendall_tau'
+    R2 = 'r2'
+    JACCARD_INDEX = 'r2'
+    F1_SCORE = 'f1_score'
+
+
 class NamesLrScheduler:
     CONST = 'const'
     MULTI_STEP = 'multi_step'
-
+    ROOT_INVERSE = 'root_inverse'
+    INVERSE = 'inverse'

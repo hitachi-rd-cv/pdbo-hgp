@@ -1,6 +1,8 @@
 FROM nvidia/cuda:10.2-runtime-ubuntu18.04
 
 RUN apt-get update
+RUN apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
 
 # Locale setting
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y locales
@@ -9,12 +11,17 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     update-locale LANG=en_US.UTF-8
 ENV LANG en_US.UTF-8
 
+# Time setting
+RUN apt-get install -y tzdata
+RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+
 # Package Instalation
 RUN apt-get install -y python3 python3-pip
 RUN apt-get install -y libsm6 libxext6 libfontconfig1 libxrender1 libglib2.0-0
 RUN apt-get install -y tmux nano iputils-ping
 RUN apt-get install -y curl
 RUN apt-get install -y libgl1-mesa-dev
+RUN apt-get install -y texlive texlive-latex-extra texlive-fonts-recommended dvipng cm-super
 
 # git
 RUN apt-get update
@@ -63,6 +70,7 @@ RUN pip3 install tensorboard==2.9.0
 RUN pip3 install incense==0.0.11
 RUN pip3 install paramiko==2.11.0
 RUN pip3 install dill==0.3.4
+RUN pip3 install latex
 
 # alias
 RUN ln -s /usr/bin/python3 /usr/bin/python

@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from constants import NamesEvalMetric
-from module_torch.hyperparameter import HyperSoftmaxWeightsBase
+from module_torch.hyperparameter import HyperSoftmaxWeightsBase, HyperRegDecay, HyperLossMasks
 
 
 class ClassifierBase(nn.Module):
@@ -15,7 +15,7 @@ class ClassifierBase(nn.Module):
         self.hyperparameter_module = hyperparameters
 
     def loss(self, inputs, *args, **kwargs):
-        if isinstance(self.hyperparameter_module, HyperSoftmaxWeightsBase):
+        if isinstance(self.hyperparameter_module, (HyperSoftmaxWeightsBase, HyperLossMasks)):
             losses = self.bare_losses(*inputs)
             losses_weighted = self.hyperparameter_module.weight_losses(losses, **kwargs)
             return torch.mean(losses_weighted) + self.reg_loss()
@@ -25,9 +25,11 @@ class ClassifierBase(nn.Module):
     def reg_loss(self):
         loss = 0.
         for param in self.parameters(recurse=True):
-            loss += 0.5 * torch.sum((self.weight_decay * param ** 2))
+            if isinstance(self.hyperparameter_module, HyperRegDecay):
+                loss += self.hyperparameter_module.get_reg_loss(param)
+            else:
+                loss += 0.5 * torch.sum((self.weight_decay * param ** 2))
         return loss
-
 
 class MultiClassifierBase(ClassifierBase):
     def bare_loss(self, x, y):

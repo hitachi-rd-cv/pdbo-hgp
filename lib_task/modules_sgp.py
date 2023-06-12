@@ -303,6 +303,16 @@ class LRSchedulerConst(LRSchedulerBase):
         return self.lr
 
 
+class LRSchedulerRootInverse(LRSchedulerBase):
+    def __call__(self, step):
+        return self.lr / ((step + 1) ** 0.5)
+
+
+class LRSchedulerInverse(LRSchedulerBase):
+    def __call__(self, step):
+        return self.lr / (step + 1)
+
+
 class LRSchedulerMulti(LRSchedulerBase):
     def __init__(self, lr, n_steps, milestones, gamma=0.1, **kwargs):
         super().__init__(lr, **kwargs)
@@ -322,4 +332,6 @@ class LRSchedulerMulti(LRSchedulerBase):
 D_LR_SCHEDULER_NODE = {
     NamesLrScheduler.CONST: LRSchedulerConst,
     NamesLrScheduler.MULTI_STEP: LRSchedulerMulti,
+    NamesLrScheduler.ROOT_INVERSE: LRSchedulerRootInverse,
+    NamesLrScheduler.INVERSE: LRSchedulerInverse,
 }

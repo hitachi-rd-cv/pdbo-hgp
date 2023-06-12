@@ -261,7 +261,6 @@ class HyperLearnersWeightsAndSingleSoftmaxLogitsWeights(HyperLearnersWeightsAndL
             outputs_perm = outputs_perm * weights_label
             return torch.movedim(outputs_perm, -1, dim)
 
-
 class HyperDummy(HyperParamBase):
     def __init__(self, *args, **kwargs):
         self.hyperparameters = nn.ParameterList([
@@ -275,6 +274,39 @@ class HyperDummy(HyperParamBase):
     def loss(self, *args, **kwargs):
         return torch.tensor(0., device=self.hyperparameters[0].device)
 
+
+class HyperRegDecay(HyperParamBase):
+    def __init__(self, *args, **kwargs):
+        self.hyperparameters = nn.ParameterList([
+            nn.Parameter(torch.empty(1)),
+        ])
+
+    def init_hyperparameters(self):
+        with torch.no_grad():
+            self.hyperparameters[0].copy_(torch.zeros_like(self.hyperparameters[0]))
+
+    def loss(self, *args, **kwargs):
+        return torch.tensor(0., device=self.hyperparameters[0].device)
+
+    def get_reg_loss(self, param):
+        return 0.5 * torch.sum(self.hyperparameters[0] * param ** 2)
+
+
+class HyperLossMasks(HyperParamBase):
+    def __init__(self, n_samples, **kwargs):
+        self.hyperparameters = nn.ParameterList([nn.Parameter(torch.empty(n_samples))])
+
+    def init_hyperparameters(self):
+        with torch.no_grad():
+            self.hyperparameters[0].copy_(torch.ones_like(self.hyperparameters[0]))
+
+    def loss(self, *args, **kwargs):
+        return torch.tensor(0., device=self.hyperparameters[0].device)
+
+    def weight_losses(self, losses, idxs, **kwargs):
+        return losses * self.hyperparameters[0][idxs]
+
+
 D_HYPER_PARAMETERS = {
     NamesHyperParam.SOFTMAX_CATEGORY_WEIGHTS: HyperSoftmaxCategoryWeights,
     NamesHyperParam.LEARNERS_WEIGHTS: HyperLearnersWeights,
@@ -284,4 +316,6 @@ D_HYPER_PARAMETERS = {
     NamesHyperParam.LEARNERS_WEIGHTS_AND_MULTI_SOFTMAX_LOGITS_WEIGHTS: HyperLearnersWeightsAndMultiSoftmaxLogitsWeights,
     NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS: HyperLearnersWeightsAndSingleSoftmaxLogitsWeights,
     NamesHyperParam.DUMMY: HyperDummy,
+    NamesHyperParam.REG_DECAY: HyperRegDecay,
+    NamesHyperParam.LOSS_MASKS: HyperLossMasks,
 }

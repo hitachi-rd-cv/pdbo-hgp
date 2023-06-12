@@ -140,5 +140,3 @@ class ComputeHyperGradErrorOfSteps(waluigi.TaskBase):
                 _run.log_scalar(NamesHGPMetric.V_DIFF_NORM, error_norm.item(), step)
 
         return error_norm_steps
-
-

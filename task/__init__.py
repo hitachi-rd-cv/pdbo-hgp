@@ -1,4 +1,5 @@
 from task.baseline import *
+from task.check_results import *
 from task.est_error import *
 from task.hyperopt import *
 from task.init import *

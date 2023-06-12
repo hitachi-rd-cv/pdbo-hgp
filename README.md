@@ -1,10 +1,10 @@
-# Personalized Decentralized Bilevel Optimization over Random Directed Networks
+# Decentralized Hyper-Gradient Computation over Time-Varying Directed Networks
 
 This is the official implementation of the experiments in the following paper:
 
 > Naoyuki Terashita and Satoshi Hara  
-> [Personalized Decentralized Bilevel Optimization over Random Directed Networks](https://arxiv.org/abs/2210.02129)  
-> *arXiv:2210.02129 (under review)*, 2022
+> [**Decentralized Hyper-Gradient Computation over Time-Varying Directed Networks**](https://arxiv.org/abs/2210.02129)  
+> *arXiv:2210.02129 (under review)*, 2023
 
 ## Environments
 
@@ -19,49 +19,48 @@ nvidia-docker run -it -u user -v $PWD/pdbo-hgp:/home/user/pdbo-hgp -w /home/user
 
 ## Experiments
 
-### Federated EMNIST Classification
+### Estimation Error of Hyper-Gradient (Section 5.1 and Appendix A.1)
+
+~~~
+# Full-batch g_i
+python main.py PlotZipComputeHyperGradErrorOfSteps config.paper.error_synth_fullbatch --local-scheduler
+# Mini-batch g_i 
+python main.py PlotZipComputeHyperGradErrorOfSteps config.paper.error_synth_minibatch --local-scheduler
+~~~
+
+### Decentralized Influence Estimation of Training Instances (Section 5.2 and Appendix A.2)
+
+~~~
+# Logistic Regression with full-batch g_i
+python main.py CompareApproxActualDiffByMostInfluentialPerturbs config.paper.infl_toy --local-scheduler
+# CNN with full-batch g_i
+python main.py CompareApproxActualDiffByMostInfluentialPerturbs config.paper.infl_emnist_digits_fullbatch --local-scheduler
+# CNN with mini-batch g_i 
+python main.py CompareApproxActualDiffByMostInfluentialPerturbs config.paper.infl_emnist_digits_minibatch --local-scheduler
+~~~
+
+### Decentralized Personalization for Deep Learning (Section 5.3 and Appendix A.3)
 
 ~~~
 # Experiments on the fully-connected and static undirected communication networks
-## PDBO-PL, PDBO-MTL, and PDBO-PL&MTL 
+## HGP-PL and HGP-MTL 
 python main.py MakeAccuracyTableHyperSGDOnFedEmSetting config.paper.personalization_fedem_hgp --local-scheduler
 ## Baselines with hyperparameter tuning 
 python main.py MakeAccuracyTableBaselineOnFedEmSetting config.paper.personalization_fedem_baseline --local-scheduler
 
 # Experiments on the random undirected and random directed communication networks
-## PDBO-PL, PDBO-MTL, and PDBO-PL&MTL
+## HGP-PL and HGP-MTL
 python main.py MakeAccuracyTableHyperSGD config.paper.personalization_sgp_hgp --local-scheduler
 ## Baselines
 python main.py MakeAccuracyTableHyperSGD config.paper.personalization_sgp_baseline --local-scheduler
 ~~~
 
-### (Appendix) Federated CIFAR10, CIFAR100, and Shakespeare on the random directed network
+## Previous versions of paper and codes
 
-~~~
-# PDBO-PL, PDBO-MTL, PDBO-PL&MTL, SGP (PDBO-PL with t_h=0), and SGP-MTL (PDBO-MTL at t_h=0)
-## CIFAR10
-python main.py MakeAccuracyTableHyperSGD config.paper.cifar10 --local-scheduler 
-## CIFAR100
-python main.py MakeAccuracyTableHyperSGD config.paper.cifar100 --local-scheduler
-## Shakespeare
-python main.py MakeAccuracyTableHyperSGD config.paper.shakespeare --local-scheduler
-
-# Local and Local-MTL
-## CIFAR10
-python main.py MakeAccuracyTableHyperSGD config.paper.cifar10_local --local-scheduler
-## CIFAR100
-python main.py MakeAccuracyTableHyperSGD config.paper.cifar100_local --local-scheduler
-## Shakespeare
-python main.py MakeAccuracyTableHyperSGD config.paper.shakespeare_local --local-scheduler
-~~~
-
-### (Appendix) Comparison of α and β
-
-~~~
-python main.py PlotZipComputeHyperGradErrorOfSteps config.paper.compare_alpha_beta --local-scheduler
-~~~
-
-![vr_error.png](./vr_error.png)
+- 5 Oct 2022 (v1): _Personalized Decentralized Bilevel Optimization over Stochastic and Directed
+  Networks_ ([**Paper**](https://arxiv.org/abs/2210.02129v1), [**Codes**](https://github.com/hitachi-rd-cv/pdbo-hgp/tree/v1))
+- 31 Jan 2023 (v2): _Personalized Decentralized Bilevel Optimization over Random Directed
+  Networks_ ([**Paper**](https://arxiv.org/abs/2210.02129v2), [**Codes**](https://github.com/hitachi-rd-cv/pdbo-hgp/tree/v2))
 
 ---
 If you have questions, please contact Naoyuki

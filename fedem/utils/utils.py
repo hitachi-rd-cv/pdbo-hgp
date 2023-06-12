@@ -1,3 +1,8 @@
+# ------------------------------------------------------------------------
+# The following codes are copied from parts of FedEM (https://github.com/omarfoq/FedEM).
+# The following codes are licensed under the Apache License 2.0.
+# The full license text is available at (https://github.com/omarfoq/FedEM/blob/main/LICENSE).
+# ------------------------------------------------------------------------
 from torch.utils.data import DataLoader
 
 from fedem.aggregator import *
@@ -272,6 +277,7 @@ def get_loaders(validation, datasets_train, datasets_valid, datasets_test, batch
         test_iterators = [get_loader(dataset, batch_size, False) for dataset, batch_size in zip(datasets_test, batch_sizes)]
 
     return train_iterators, val_iterators, test_iterators
+
 
 def get_aggregator(
         aggregator_type,

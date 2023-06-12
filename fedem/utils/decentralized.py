@@ -1,3 +1,9 @@
+# ------------------------------------------------------------------------
+# The following codes are copied from parts of FedEM (https://github.com/omarfoq/FedEM).
+# The following codes are licensed under the Apache License 2.0.
+# The full license text is available at (https://github.com/omarfoq/FedEM/blob/main/LICENSE).
+# ------------------------------------------------------------------------
+
 import cvxpy as cp
 import networkx as nx
 import numpy as np

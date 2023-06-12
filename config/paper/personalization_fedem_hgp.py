@@ -8,167 +8,107 @@ def get_config():
     configs_overwrite = []
     names_option = []
 
-    names_option.append(f'PDBO-AT (centralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.CNN_EMNIST,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
-            'kwargs_model': {'weight_decay': 0.},
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_softmax_weight',
-            'decentralized': False,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.03,
-        mode_graph=ModesGraph.CONSTANTS,
-        kwargs_init_graph={},
-        hyper_learning_rate=1e-1,
-    ))
+    for M in [10]:
+        for S in [1, 10]:
+            names_option.append(f'PDBO-AT (centralized, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.CNN_EMNIST,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.NORMALIZE,
+                    'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+                    'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
+                    'kwargs_model': {'weight_decay': 0.},
+                },
+                kwargs_fedem={
+                    'experiment': 'emnist_softmax_weight',
+                    'decentralized': False,
+                },
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                lr=0.03,
+                mode_graph=ModesGraph.CONSTANTS,
+                kwargs_init_graph={},
+                hyper_learning_rate=1e-1,
+            ))
 
-    names_option.append(f'PDBO-AT (decentralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.CNN_EMNIST,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.WEIGHT_GIVEN,
-            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
-            'kwargs_model': {'weight_decay': 0.},
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_softmax_weight',
-            'decentralized': True,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.03,
-        mode_graph=ModesGraph.ERDOS_RENYI,
-        kwargs_init_graph={'p': 0.5},
-        hyper_learning_rate=1e-1,
-    ))
+            names_option.append(f'PDBO-AT (decentralized, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.CNN_EMNIST,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.WEIGHT_GIVEN,
+                    'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+                    'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
+                    'kwargs_model': {'weight_decay': 0.},
+                },
+                kwargs_fedem={
+                    'experiment': 'emnist_softmax_weight',
+                    'decentralized': True,
+                },
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                lr=0.03,
+                mode_graph=ModesGraph.ERDOS_RENYI,
+                kwargs_init_graph={'p': 0.5},
+                hyper_learning_rate=1e-1,
+            ))
 
-    names_option.append(f'PDBO-MTL (centralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
-            'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 0.},
-            },
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_learners_ensemble',
-            'decentralized': False,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.1,
-        mode_graph=ModesGraph.CONSTANTS,
-        kwargs_init_graph={},
-        hyper_learning_rate=1e0,
-    ))
+            names_option.append(f'PDBO-MTL (centralized, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.LEARNERS_ENSEMBLE,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.NORMALIZE,
+                    'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
+                    'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
+                    'kwargs_model': {
+                        'n_learners': 3,
+                        'name_learner_model': AbbrModels.CNN_EMNIST,
+                        'kwargs_learner': {'weight_decay': 0.},
+                    },
+                },
+                kwargs_fedem={
+                    'experiment': 'emnist_learners_ensemble',
+                    'decentralized': False,
+                },
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                lr=0.1,
+                mode_graph=ModesGraph.CONSTANTS,
+                kwargs_init_graph={},
+                hyper_learning_rate=1e0,
+            ))
 
-    names_option.append(f'PDBO-MTL (decentralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.WEIGHT_GIVEN,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
-            'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 0.},
-            },
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_learners_ensemble',
-            'decentralized': True,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.1,
-        mode_graph=ModesGraph.ERDOS_RENYI,
-        kwargs_init_graph={'p': 0.5},
-        hyper_learning_rate=1e0,
-    ))
-
-    names_option.append(f'PDBO-AT(S)&MTL (centralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {
-                'n_learners': 3,
-                "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
-                "gamma_learners": 1e-2,
-                'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 1e-2,
-            },
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 0.},
-            },
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_learners_ensemble',
-            'decentralized': False,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.1,
-        mode_graph=ModesGraph.CONSTANTS,
-        kwargs_init_graph={},
-        lrs_per_hyperparameter=[1e0, 1e-1],
-        hyper_learning_rate=None,
-    ))
-
-    names_option.append(f'PDBO-AT(S)&MTL (decentralized)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.WEIGHT_GIVEN,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {
-                'n_learners': 3,
-                "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
-                "gamma_learners": 1e-2,
-                'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 1e-2,
-            },
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 0.},
-            },
-        },
-        kwargs_fedem={
-            'experiment': 'emnist_learners_ensemble',
-            'decentralized': True,
-        },
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lr=0.1,
-        mode_graph=ModesGraph.ERDOS_RENYI,
-        kwargs_init_graph={'p': 0.5},
-        lrs_per_hyperparameter=[1e0, 1e-1],
-        hyper_learning_rate=None,
-    ))
+            names_option.append(f'PDBO-MTL (decentralized, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.LEARNERS_ENSEMBLE,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.WEIGHT_GIVEN,
+                    'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
+                    'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
+                    'kwargs_model': {
+                        'n_learners': 3,
+                        'name_learner_model': AbbrModels.CNN_EMNIST,
+                        'kwargs_learner': {'weight_decay': 0.},
+                    },
+                },
+                kwargs_fedem={
+                    'experiment': 'emnist_learners_ensemble',
+                    'decentralized': True,
+                },
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                lr=0.1,
+                mode_graph=ModesGraph.ERDOS_RENYI,
+                kwargs_init_graph={'p': 0.5},
+                hyper_learning_rate=1e0,
+            ))
 
     return dict(
         workspace_directory="./processed",
@@ -195,11 +135,9 @@ def get_config():
                 # NamesEvalMetric.ACCURACY
             ]},
         option_hgp={
+            KeysOptionHGP.DUMPING: 1e-2,
             KeysOptionHGP.USE_TRUE_EXPECTED_EDGES: False,
-            KeysOptionHGP.MODE_UPDATE: ModesHGPUpdate.SIMULTANEOUS,
-            KeysOptionHGP.DUMPING: 1.0,
-            KeysOptionHGP.ALPHA_V: 1.0,
-            KeysOptionHGP.ALPHA_W: 0.0,
+            KeysOptionHGP.USE_TRUE_DEBIAS_WEIGHTS: False,
         },
         option_hgp_insignificant={
             KeysOptionHGPInsig.NAMES_METRIC_LOG: [],

@@ -78,3 +78,14 @@ class TaskBase(gokart.TaskOnKart):
         if isinstance(value, Mapping):
             return dict(((k, cls.recursively_make_dict(v)) for k, v in value.items()))
         return value
+
+    def load(self, target=None):
+        def _load(targets):
+            if isinstance(targets, list) or isinstance(targets, tuple):
+                return [_load(t) for t in targets]
+            if isinstance(targets, dict):
+                return {k: _load(t) for k, t in targets.items()}
+            print(targets.path())
+            return targets.load()
+
+        return _load(self._get_input_targets(target))

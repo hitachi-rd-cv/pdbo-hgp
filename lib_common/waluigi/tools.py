@@ -110,6 +110,7 @@ class PyTorchPickleFileProcessor(FileProcessor):
         torch.save(obj, file)
 
 
+
 def normalize_list_recursively(list_):
     '''
     get n-level nested list and returns un-nested list

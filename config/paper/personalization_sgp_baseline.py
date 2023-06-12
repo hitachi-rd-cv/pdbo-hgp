@@ -76,10 +76,7 @@ def get_config():
         option_hgp={
             KeysOptionHGP.DEPTH: 1,
             KeysOptionHGP.USE_TRUE_EXPECTED_EDGES: False,
-            KeysOptionHGP.MODE_UPDATE: ModesHGPUpdate.SIMULTANEOUS,
             KeysOptionHGP.DUMPING: 1.0,
-            KeysOptionHGP.ALPHA_V: 1.0,
-            KeysOptionHGP.ALPHA_W: 0.0,
         },
         name_dataset=NamesDataset.EMNIST,
         shuffle_train=True,

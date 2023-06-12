@@ -4,11 +4,10 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from constants import KeysOptionHGP, KeysOptionTrainSig, KeysOptionEval, KeysOptionHGPInsig, ModesHGPUpdate, \
-    NamesHGPMetric, ModesSGP
+from constants import KeysOptionHGP, KeysOptionEval, KeysOptionHGPInsig, \
+    NamesHGPMetric
 from lib_task.concat_hgp import compute_expected_p_mat
-from lib_task.modules_sgp import D_LR_SCHEDULER_NODE
-from module_torch.hgp import HyperGradEstimatorAssran, HyperGradEstimatorNedic
+from module_torch.hgp import HyperGradEstimator
 
 
 def hyper_gradient_push(clients, graph, loaders_train, loaders_valid, option_eval_metric, n_steps, batch_sizes, lrs,
@@ -26,28 +25,14 @@ def hyper_gradient_push(clients, graph, loaders_train, loaders_valid, option_eva
         np.random.seed(seed)
         random.seed(seed)
 
-    if option_train_significant[KeysOptionTrainSig.MODE_SGP] == ModesSGP.ASSRAN:
-        Estimator = HyperGradEstimatorAssran
-    elif option_train_significant[KeysOptionTrainSig.MODE_SGP] == ModesSGP.NEDIC:
-        Estimator = HyperGradEstimatorNedic
-    else:
-        raise ValueError(option_train_significant[KeysOptionTrainSig.MODE_SGP])
-
     estimators = []
-    for client, loader_train, loader_valid, batch_size, lr in zip(clients, loaders_train, loaders_valid, batch_sizes,
-                                                                  lrs):
-        estimator = Estimator(
+    for client, loader_train, loader_valid, batch_size, lr in zip(clients, loaders_train, loaders_valid, batch_sizes, lrs):
+        estimator = HyperGradEstimator(
             client=client,
             loader_train=loader_train,
             loader_valid=loader_valid,
-            lr_scheduler=D_LR_SCHEDULER_NODE[option_train_significant[KeysOptionTrainSig.LR_SCHEDULER]](lr,
-                                                                                                        n_steps=n_steps,
-                                                                                                        **
-                                                                                                        option_train_significant[
-                                                                                                            KeysOptionTrainSig.KWARGS_LR_SCHEDULER]),
             dumping=option_hgp[KeysOptionHGP.DUMPING],
-            alpha_v=option_hgp[KeysOptionHGP.ALPHA_V],
-            alpha_w=option_hgp[KeysOptionHGP.ALPHA_W],
+            use_iid_samples=option_hgp[KeysOptionHGP.INDEPENDENT_JACOBS]
         )
         estimators.append(estimator)
 
@@ -63,56 +48,52 @@ def hyper_gradient_push(clients, graph, loaders_train, loaders_valid, option_eva
         save_intermediate_hypergradients=save_intermediate_hypergradients,
     )
 
-    if option_hgp[KeysOptionHGP.USE_TRUE_EXPECTED_EDGES]:
+    p_vecs_true = [None] * len(clients)
+    weights_true = [None] * len(clients)
+
+    if option_hgp[KeysOptionHGP.USE_TRUE_EXPECTED_EDGES] or option_hgp[KeysOptionHGP.USE_TRUE_DEBIAS_WEIGHTS]:
+        # get true expected mixing matrix
         p_mat = compute_expected_p_mat(graph, clients)
-        if true_backward_mode:
-            # transposing rate_connected_mat results in passing expected out_neighbors to clients, letting them compute true backward mode
-            adj_mat = graph.rate_connected_mat.T
-        else:
-            adj_mat = graph.rate_connected_mat
-    else:
-        p_mat = None
-        adj_mat = None
+        # get true debias weight
+        eig_vec = torch.linalg.eig(p_mat)[1][:, 0].real
+
+        if option_hgp[KeysOptionHGP.USE_TRUE_EXPECTED_EDGES]:
+            p_vecs_true = p_mat.T
+
+        if option_hgp[KeysOptionHGP.USE_TRUE_DEBIAS_WEIGHTS]:
+            weights_true = len(clients) * eig_vec / eig_vec.sum()
 
     print('Start implicit approximation ...')
     neumann_depth = option_hgp[KeysOptionHGP.DEPTH]
     for m in tqdm(range(neumann_depth)):
-        names_hypergrad_to_update = get_names_hypergrad_to_update(option_hgp[KeysOptionHGP.MODE_UPDATE], m, neumann_depth)
-
-        # sample edges
-        graph.sample()
-        msg_generators = []
+        # init w
         for estimator in estimators:
-            are_connected_hgp = graph.are_connected(estimator.idx_node)
-            if true_backward_mode:
-                # make graph bidirected only for evaluating estimation error
-                are_connected_hgp = torch.hstack([graph.are_connected(idx_from)[estimator.idx_node] for idx_from in range(len(estimators))])
-            msg_generators.append(estimator.get_hgp_msg_generator(are_connected_hgp))
+            estimator.init_s()
 
-        for from_node, estimator in enumerate(estimators):
-            if option_hgp[KeysOptionHGP.USE_TRUE_EXPECTED_EDGES]:
-                sgp_msgs = estimator.get_sgp_msg_generator(
-                    step=n_steps,
-                    no_weight_update=option_train_significant[KeysOptionTrainSig.DISABLE_DEBIAS_WEIGHT],
-                    true_p_vec_expected=p_mat[:, from_node],
-                    true_are_in_neighbors_expected=adj_mat[from_node, :]
-                )
-            else:
-                sgp_msgs = estimator.get_sgp_msg_generator(
-                    step=n_steps,
-                    no_weight_update=option_train_significant[KeysOptionTrainSig.DISABLE_DEBIAS_WEIGHT]
-                )
-            for msg_generator in msg_generators:
-                sgp_msg = next(sgp_msgs)
-                hgp_msg = next(msg_generator)
-                estimator.mix_hgp_partial(hgp_msg, sgp_msg, values_update=names_hypergrad_to_update)
-            sgp_msgs.close()
-        for estimator in estimators:
-            estimator.step(
-                values_update=names_hypergrad_to_update,
-                step=n_steps,
-                no_weight_update=option_train_significant[KeysOptionTrainSig.DISABLE_DEBIAS_WEIGHT],
-            )
+        if option_hgp[KeysOptionHGP.INIT_DEBIAS_WEIGHT]:
+            for esitmator in estimators:
+                esitmator.client.gossip.initialize_weight()
+
+        for s in range(option_hgp[KeysOptionHGP.N_PUSH]):
+            # sample edges
+            graph.sample()
+
+            for estimator, p_vec_true in zip(estimators, p_vecs_true):
+                are_connected_hgp = graph.are_connected(estimator.idx_node)
+                msg_generator = estimator.get_hgp_msg_generator(are_connected_hgp, p_vec_true=p_vec_true)
+
+                # send hgp messages to the neighbors
+                for receiver, msg in zip(estimators, msg_generator):
+                    receiver.mix_s(msg)
+
+            # update w
+            for estimator in estimators:
+                estimator.step_s()
+
+        # update u and v
+        for estimator, weight_true in zip(estimators, weights_true):
+            estimator.step_m(weight_true=weight_true)
+
         # log norms of hypergradient
         logger.log(m)
 
@@ -122,27 +103,6 @@ def hyper_gradient_push(clients, graph, loaders_train, loaders_valid, option_eva
     return hypergrads_nodes, estimators, logger.hypergrads_nodes_steps
 
 
-def get_names_hypergrad_to_update(mode, m, neumann_depth):
-    if mode == ModesHGPUpdate.SIMULTANEOUS:
-        names_hypergrad_to_update = ('u', 'v')
-    elif mode == ModesHGPUpdate.ALT_U_V:
-        if m % 2 == 0:
-            names_hypergrad_to_update = ('u',)
-        else:
-            names_hypergrad_to_update = ('v',)
-    elif mode == ModesHGPUpdate.ALT_V_U:
-        if m % 2 == 0:
-            names_hypergrad_to_update = ('v',)
-        else:
-            names_hypergrad_to_update = ('u',)
-    elif mode == ModesHGPUpdate.U_TO_V:
-        if m < neumann_depth / 2:
-            names_hypergrad_to_update = ('u',)
-        else:
-            names_hypergrad_to_update = ('v',)
-    else:
-        raise ValueError(mode)
-    return names_hypergrad_to_update
 
 class HGPLogger:
     def __init__(self, estimators, _run, hgp_metrics, hypergrads_nodes_true=None, save_intermediate_hypergradients=False):
@@ -182,16 +142,14 @@ class HGPLogger:
     def get_hypergrad_squared_norm(estimator, name_metric, hypergrads_nodes_true=None):
         if name_metric == NamesHGPMetric.U_NORM:
             squared_norm_u_x = 0.
-            for u_x in estimator.us_x:
+            for u_x in estimator.us:
                 squared_norm_u_x += torch.sum(u_x ** 2)
-            squared_norm_u_w = estimator.u_w ** 2
-            return squared_norm_u_x + squared_norm_u_w
+            return squared_norm_u_x
         elif name_metric == NamesHGPMetric.W_NORM:
             squared_norm_w_x = 0.
-            for w_x in estimator.ws_x:
+            for w_x in estimator.ws:
                 squared_norm_w_x += torch.sum(w_x ** 2)
-            squared_norm_w_w = estimator.w_w ** 2
-            return squared_norm_w_x + squared_norm_w_w
+            return squared_norm_w_x
         elif name_metric == NamesHGPMetric.V_NORM:
             squared_norm_v = 0.
             for v in estimator.vs:

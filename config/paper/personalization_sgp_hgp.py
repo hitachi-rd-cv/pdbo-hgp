@@ -8,137 +8,92 @@ def get_config():
     configs_overwrite = []
     names_option = []
 
-    names_option.append(f'PDBO-AT (undirected)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.CNN_EMNIST,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-3},
-            'kwargs_model': {'weight_decay': 1e-3},
-        },
-        mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
-        lr=1e-1,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        hyper_learning_rate=1e-1,
-    ))
+    for M in [10]:
+        for S in [1, 10]:
+            lr = 1e-1
+            names_option.append(f'PDBO-AT (undirected, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.CNN_EMNIST,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.NORMALIZE,
+                    'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+                    'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-3},
+                    'kwargs_model': {'weight_decay': 1e-3},
+                },
+                mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
+                lr=lr,
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                hyper_learning_rate=1e-1,
+            ))
 
-    names_option.append(f'PDBO-AT (directed)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.CNN_EMNIST,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-3},
-            'kwargs_model': {'weight_decay': 1e-3},
-        },
-        mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
-        lr=1e-1,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        hyper_learning_rate=1e-1,
-    ))
+            names_option.append(f'PDBO-AT (directed, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.CNN_EMNIST,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.NORMALIZE,
+                    'name_hyperparam': NamesHyperParam.HYPER_SOFTMAX_LOGITS_WEIGHTS,
+                    'kwargs_hyperparam': {"hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-3},
+                    'kwargs_model': {'weight_decay': 1e-3},
+                },
+                mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
+                lr=lr,
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                hyper_learning_rate=1e-1,
+            ))
 
-    names_option.append(f'PDBO-MTL (undirected)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
-            'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 1e-3},
-            },
-        },
-        mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
-        lr=0.5,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        hyper_learning_rate=1e-1,
-    ))
+            gamma = 1e-2
+            lr = 0.5
+            lr_h = 1e-1
 
-    names_option.append(f'PDBO-MTL (directed')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
-            'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": 1e-2},
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 1e-3},
-            },
-        },
-        mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
-        lr=0.5,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        hyper_learning_rate=1e-1,
-    ))
+            names_option.append(f'PDBO-MTL (undirected, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.LEARNERS_ENSEMBLE,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.NORMALIZE,
+                    'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
+                    'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": gamma},
+                    'kwargs_model': {
+                        'n_learners': 3,
+                        'name_learner_model': AbbrModels.CNN_EMNIST,
+                        'kwargs_learner': {'weight_decay': 1e-3},
+                    },
+                },
+                mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
+                lr=lr,
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                hyper_learning_rate=lr_h,
+            ))
 
-    names_option.append(f'PDBO-AT(S)&MTL (undirected)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {
-                'n_learners': 3,
-                "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
-                "gamma_learners": 1e-2,
-                'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 1e-3,
-            },
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 1e-3},
-            },
-        },
-        mode_graph=ModesGraph.STOCHASTIC_BIDIRECTED,
-        lr=0.5,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lrs_per_hyperparameter=[1e0, 1e-1],
-        hyper_learning_rate=None,
-    ))
-
-    names_option.append(f'PDBO-AT(S)&MTL (directed)')
-    configs_overwrite.append(dict(
-        name_model=AbbrModels.LEARNERS_ENSEMBLE,
-        kwargs_build_base={
-            'mode_gossip': ModesGossip.NORMALIZE,
-            'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS_AND_SINGLE_SOFTMAX_LOGITS_WEIGHTS,
-            'kwargs_hyperparam': {
-                'n_learners': 3,
-                "hyper_loss_learners": NamesHyperLoss.L2_REGULARIZER,
-                "gamma_learners": 1e-2,
-                'hyper_loss_categories': NamesHyperLoss.L2_REGULARIZER,
-                'gamma_categories': 1e-3,
-            },
-            'kwargs_model': {
-                'n_learners': 3,
-                'name_learner_model': AbbrModels.CNN_EMNIST,
-                'kwargs_learner': {'weight_decay': 1e-3},
-            },
-        },
-        mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
-        lr=0.5,
-        option_hgp={
-            KeysOptionHGP.DEPTH: 200,
-        },
-        lrs_per_hyperparameter=[1e0, 1e-1],
-        hyper_learning_rate=None,
-    ))
+            names_option.append(f'PDBO-MTL (directed, M={M}, S={S})')
+            configs_overwrite.append(dict(
+                name_model=AbbrModels.LEARNERS_ENSEMBLE,
+                kwargs_build_base={
+                    'mode_gossip': ModesGossip.NORMALIZE,
+                    'name_hyperparam': NamesHyperParam.LEARNERS_WEIGHTS,
+                    'kwargs_hyperparam': {'n_learners': 3, "hyper_loss": NamesHyperLoss.L2_REGULARIZER, "gamma": gamma},
+                    'kwargs_model': {
+                        'n_learners': 3,
+                        'name_learner_model': AbbrModels.CNN_EMNIST,
+                        'kwargs_learner': {'weight_decay': 1e-3},
+                    },
+                },
+                mode_graph=ModesGraph.STOCHASTIC_DIRECTED,
+                lr=lr,
+                option_hgp={
+                    KeysOptionHGP.DEPTH: M,
+                    KeysOptionHGP.N_PUSH: S,
+                },
+                hyper_learning_rate=lr_h,
+            ))
 
     return dict(
         fix_random_seed_value=1234,
@@ -150,11 +105,9 @@ def get_config():
         kwargs_build_base={
         },
         option_hgp={
+            KeysOptionHGP.DUMPING: 1e-1,
             KeysOptionHGP.USE_TRUE_EXPECTED_EDGES: False,
-            KeysOptionHGP.MODE_UPDATE: ModesHGPUpdate.SIMULTANEOUS,
-            KeysOptionHGP.DUMPING: 1.0,
-            KeysOptionHGP.ALPHA_V: 1.0,
-            KeysOptionHGP.ALPHA_W: 0.0,
+            KeysOptionHGP.USE_TRUE_DEBIAS_WEIGHTS: False,
         },
         lr=None,
         kwargs_init_hparams={},

@@ -142,7 +142,7 @@ def get_config():
         ))
 
         # "FedEM (Decentralized)",
-        names_option.append(f"(lr={lr}) FedEM (Decentralized)")
+        names_option.append(f"(lr={lr}, p={0.5}) FedEM (Decentralized)")
         configs_overwrite.append(dict(
             kwargs_fedem={
                 'communication_probability': 0.1,
@@ -166,10 +166,11 @@ def get_config():
                 'verbose': 1
             },
             lr=lr,
+            kwargs_init_graph={'p': 0.5},
         ))
 
         # "FedAvg (Decentralized)",
-        names_option.append(f"(lr={lr}) FedAvg (Decentralized)")
+        names_option.append(f"(lr={lr}, p={0.5}) FedAvg (Decentralized)")
         configs_overwrite.append(dict(
             kwargs_fedem={
                 'communication_probability': 0.1,
@@ -193,6 +194,7 @@ def get_config():
                 'verbose': 1
             },
             lr=lr,
+            kwargs_init_graph={'p': 0.5},
         ))
 
         for mu in [1e1, 1e0, 1e-1, 1e-2]:
@@ -259,7 +261,7 @@ def get_config():
         name_model=AbbrModels.CNN_EMNIST,
         kwargs_build_base={},
         mode_graph=ModesGraph.ERDOS_RENYI,
-        kwargs_init_graph={'p': 0.5},
+        kwargs_init_graph={'p': 0.4},
         option_eval_metric={
             KeysOptionEval.NAME: NamesEvalMetric.LOSS_BARE_MEAN},
         option_train_significant={

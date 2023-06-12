@@ -5,7 +5,7 @@ from torch import nn
 
 from module_torch.gossip_protocol import D_GOSSIP_CLASS
 from module_torch.hyperparameter import D_HYPER_PARAMETERS, HyperSoftmaxSampleWeights, \
-    HyperSoftmaxCategoryWeights, HyperLearnersWeightsAndSoftmaxCategoryWeights
+    HyperSoftmaxCategoryWeights, HyperLearnersWeightsAndSoftmaxCategoryWeights, HyperLossMasks
 from module_torch.model import D_MODELS
 
 
@@ -120,7 +120,7 @@ class Client(nn.Module):
         return update_steps
 
     def get_kwargs_loss(self, inputs, idxs):
-        if isinstance(self.hyperparameter_module, HyperSoftmaxSampleWeights):
+        if isinstance(self.hyperparameter_module, (HyperSoftmaxSampleWeights, HyperLossMasks)):
             return {'idxs': idxs}
         elif isinstance(self.hyperparameter_module, (
                 HyperSoftmaxCategoryWeights, HyperLearnersWeightsAndSoftmaxCategoryWeights
